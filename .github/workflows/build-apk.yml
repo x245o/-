@@ -8,9 +8,6 @@ on:
       - 'SwwaqTalabatiAndroid_source.zip'
       - '.github/workflows/build-apk.yml'
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,14 +23,12 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 12266719
-          accept-android-sdk-licenses: true
-          packages: |
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -42,12 +37,13 @@ jobs:
 
       - name: Extract project
         run: |
+          mkdir -p extracted
           unzip -q SwwaqTalabatiAndroid_source.zip -d extracted
 
       - name: Build APK
         run: |
           cd extracted/SwwaqTalabatiAndroid
-          gradle assembleDebug --stacktrace
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
